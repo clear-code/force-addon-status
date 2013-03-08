@@ -1,0 +1,5 @@
+component	{cd2892e0-87a8-11e2-9e96-0800200c9a66}	components/Startup.js
+contract	@clear-code.com/force-addon-status/startup;1	{cd2892e0-87a8-11e2-9e96-0800200c9a66}
+category	profile-after-change	ForceAddonStatusStartupService	@clear-code.com/force-addon-status/startup;1
+
+resource force-addon-status-modules modules/
