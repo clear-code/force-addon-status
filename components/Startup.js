@@ -41,33 +41,43 @@ ForceAddonStatusStartupService.prototype = {
 
     var prefix = 'extensions.force-addon-status@clear-code.com.addons.';
     var keys = prefs.getDescendant(prefix);
+    var changedCount = 0;
     keys.forEach(function(aKey) {
       var id = aKey.replace(prefix, '');
       var shouldBeActive = prefs.getPref(aKey);
       var deferred = new Deferred();
       AddonManager.getAddonByID(id, function(aAddon) {
         if (!aAddon || aAddon.isActive == shouldBeActive)
-          return deferred.call(false);
+          return deferred.call();
 
         aAddon.userDisabled = !shouldBeActive;
-        deferred.call(true);
+        changedCount++;
+        deferred.call();
       });
       deferredTasks.push(deferred);
     });
 
-    if (deferredTasks.length)
+    if (deferredTasks.length) {
+      let self = this;
       Deferred
         .parallel(deferredTasks)
         .next(function(results) {
-          if (results.some(function(aChanged) {
-                return aChanged;
-              })) {
-            Cc['@mozilla.org/toolkit/app-startup;1']
-              .getService(Ci.nsIAppStartup)
-              .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eForceQuit);
+          if (changedCount > 0) {
+            self.restart();
           }
+        })
+        .error(function(error) {
+          Components.utils.reportError(error);
         });
-  },  
+    }
+  },
+
+  restart : function()
+  {
+    Cc['@mozilla.org/toolkit/app-startup;1']
+      .getService(Ci.nsIAppStartup)
+      .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eForceQuit);
+  },
   
   QueryInterface : function(aIID) 
   {
