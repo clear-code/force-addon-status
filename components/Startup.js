@@ -24,7 +24,6 @@ ForceAddonStatusStartupService.prototype = {
   {
     switch (aTopic)
     {
-      case 'app-startup':
       case 'profile-after-change':
         ObserverService.addObserver(this, 'final-ui-startup', false);
         return;
