@@ -43,7 +43,7 @@ ForceAddonStatusStartupService.prototype = {
     var changedCount = { value : 0 };
     this.checkExtensionsStatus(changedCount)
       .next(function() {
-        return this.checkPluginsStatus(changedCount);
+        return self.checkPluginsStatus(changedCount);
       })
       .next(function() {
         if (changedCount.value > 0) {
