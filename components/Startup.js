@@ -13,6 +13,8 @@ Components.utils.import('resource://gre/modules/AddonManager.jsm');
 Components.utils.import('resource://force-addon-status-modules/lib/prefs.js');
 Components.utils.import('resource://force-addon-status-modules/lib/jsdeferred.js');
 
+const BASE = 'extensions.force-addon-status@clear-code.com.';
+
 function ForceAddonStatusStartupService() { 
 }
 ForceAddonStatusStartupService.prototype = {
@@ -37,11 +39,26 @@ ForceAddonStatusStartupService.prototype = {
  
   checkStatus : function() 
   {
+    var self = this;
+    var changedCount = { value : 0 };
+    this.checkStatusForIDs(changedCount)
+      .next(function(results) {
+        if (changedCount.value > 0) {
+          self.restart();
+        }
+      })
+      .error(function(error) {
+        Components.utils.reportError(error);
+      });
+  },
+
+  checkStatusForIDs : function(aChangedCount)
+  {
     var deferredTasks = [];
 
-    var prefix = 'extensions.force-addon-status@clear-code.com.addons.';
+    var prefix = BASE + 'addons.';
     var keys = prefs.getDescendant(prefix);
-    var changedCount = 0;
+    aChangedCount.value = aChangedCount.value || 0;
     keys.forEach(function(aKey) {
       var id = aKey.replace(prefix, '');
       var shouldBeActive = prefs.getPref(aKey);
@@ -51,25 +68,16 @@ ForceAddonStatusStartupService.prototype = {
           return deferred.call();
 
         aAddon.userDisabled = !shouldBeActive;
-        changedCount++;
+        aChangedCount.value++;
         deferred.call();
       });
       deferredTasks.push(deferred);
     });
 
-    if (deferredTasks.length) {
-      let self = this;
-      Deferred
-        .parallel(deferredTasks)
-        .next(function(results) {
-          if (changedCount > 0) {
-            self.restart();
-          }
-        })
-        .error(function(error) {
-          Components.utils.reportError(error);
-        });
-    }
+    if (deferredTasks.length > 0)
+      return Deferred.parallel(deferredTasks);
+    else
+      return Deferred;
   },
 
   restart : function()
