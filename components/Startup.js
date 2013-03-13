@@ -90,7 +90,7 @@ ForceAddonStatusStartupService.prototype = {
     var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
     var allPatterns = [];
     controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
-      var pattern = prefs.getPref(aEntryBaseKey + '.patten');
+      var pattern = prefs.getPref(aEntryBaseKey + '.pattern');
       allPatterns.push(pattern);
       return {
         pattern :        new RegExp(pattern),
