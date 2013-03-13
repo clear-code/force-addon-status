@@ -110,7 +110,7 @@ ForceAddonStatusStartupService.prototype = {
         if (!aControl.pattern.test(aPluginTag.name))
           return false;
         if (aPluginTag.disabled == !aControl.shouldBeActive)
-          return false;
+          return true;
         aPluginTag.disabled = !aControl.shouldBeActive;
         aChangedCount.value++;
         return true;
