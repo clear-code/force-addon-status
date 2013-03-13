@@ -41,7 +41,7 @@ ForceAddonStatusStartupService.prototype = {
   {
     var self = this;
     var changedCount = { value : 0 };
-    this.checkStatusForIDs(changedCount)
+    this.checkExtensionsStatus(changedCount)
       .next(function(results) {
         if (changedCount.value > 0) {
           self.restart();
@@ -52,7 +52,7 @@ ForceAddonStatusStartupService.prototype = {
       });
   },
 
-  checkStatusForIDs : function(aChangedCount)
+  checkExtensionsStatus : function(aChangedCount)
   {
     var deferredTasks = [];
 
