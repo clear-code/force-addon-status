@@ -88,6 +88,9 @@ ForceAddonStatusStartupService.prototype = {
     aChangedCount.value = aChangedCount.value || 0;
 
     var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
+    if (controlledPlugins.length == 0)
+      return Deferred;
+
     var allPatterns = [];
     controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
       var pattern = prefs.getPref(aEntryBaseKey + '.pattern');
