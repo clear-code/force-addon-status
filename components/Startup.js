@@ -98,7 +98,8 @@ ForceAddonStatusStartupService.prototype = {
       allPatterns.push(pattern);
       return {
         pattern :        new RegExp(pattern),
-        shouldBeActive : prefs.getPref(aEntryBaseKey + '.status')
+        shouldBeActive : prefs.getPref(aEntryBaseKey + '.status'),
+        blocklisted :    prefs.getPref(aEntryBaseKey + '.blocklisted')
       };
     });
     controlledPlugins = controlledPlugins.filter(function(aControl) {
@@ -117,9 +118,12 @@ ForceAddonStatusStartupService.prototype = {
       controlledPlugins.some(function(aControl) {
         if (!aControl.pattern.test(aPluginTag.name))
           return false;
-        if (aPluginTag.disabled == !aControl.shouldBeActive)
+        if (aPluginTag.disabled == !aControl.shouldBeActive &&
+            aPluginTag.blocklisted === aControl.blocklisted)
           return true;
         aPluginTag.disabled = !aControl.shouldBeActive;
+        if (aPluginTag.blocklisted !== null)
+          aPluginTag.blocklisted = aControl.blocklisted;
         aChangedCount.value++;
         return true;
       });
