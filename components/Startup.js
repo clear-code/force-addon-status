@@ -42,7 +42,10 @@ ForceAddonStatusStartupService.prototype = {
     var self = this;
     var changedCount = { value : 0 };
     this.checkExtensionsStatus(changedCount)
-      .next(function(results) {
+      .next(function() {
+        return this.checkPluginsStatus(changedCount);
+      })
+      .next(function() {
         if (changedCount.value > 0) {
           self.restart();
         }
@@ -78,6 +81,44 @@ ForceAddonStatusStartupService.prototype = {
       return Deferred.parallel(deferredTasks);
     else
       return Deferred;
+  },
+
+  checkPluginsStatus : function(aChangedCount)
+  {
+    aChangedCount.value = aChangedCount.value || 0;
+
+    var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
+    var allPatterns = [];
+    controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
+      var pattern = prefs.getPref(aEntryBaseKey + '.patten');
+      allPatterns.push(pattern);
+      return {
+        pattern :        new RegExp(pattern),
+        shouldBeActive : prefs.getPref(aEntryBaseKey + '.status')
+      };
+    });
+    allPatterns = new RegExp('(' + allPatterns.join('|') + ')');
+
+    var PluginHost = Cc['@mozilla.org/plugin/host;1']
+                      .getService(Ci.nsIPluginHost);
+    var plugins = PluginHost.getPluginTags();
+    plugins.forEach(function(aPluginTag) {
+      if (!allPatterns.test(aPluginTag.name))
+        return;
+
+      controlledPlugins.some(function(control) {
+        if (!control.pattern.test(aPluginTag.name))
+          return false;
+        if (aPluginTag.disabled == !shouldBeActive)
+          return false;
+
+        aPluginTag.disabled = !shouldBeActive;
+        aChangedCount.value++;
+        return true;
+      });
+    });
+
+    return Deferred;
   },
 
   restart : function()
