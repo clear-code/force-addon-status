@@ -91,12 +91,17 @@ ForceAddonStatusStartupService.prototype = {
     var allPatterns = [];
     controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
       var pattern = prefs.getPref(aEntryBaseKey + '.pattern');
+      if (!pattern) return null;
       allPatterns.push(pattern);
       return {
         pattern :        new RegExp(pattern),
         shouldBeActive : prefs.getPref(aEntryBaseKey + '.status')
       };
     });
+    controlledPlugins = controlledPlugins.filter(function(aControl) {
+      return aControl;
+    });
+
     allPatterns = new RegExp('(' + allPatterns.join('|') + ')');
 
     var PluginHost = Cc['@mozilla.org/plugin/host;1']
