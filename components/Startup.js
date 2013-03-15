@@ -32,16 +32,24 @@ ForceAddonStatusStartupService.prototype = {
 
       case 'final-ui-startup':
         ObserverService.removeObserver(this, 'final-ui-startup');
-        this.checkStatus();
+        var self = this;
+        this.checkStatus()
+          .next(function() {
+            self.registerListener();
+          });
         return;
     }
   },
  
   checkStatus : function() 
   {
+    if (this.checking)
+      return;
+    this.checking = true;
+
     var self = this;
     var changedCount = { value : 0 };
-    this.checkExtensionsStatus(changedCount)
+    return this.checkExtensionsStatus(changedCount)
       .next(function() {
         return self.checkPluginsStatus();
       })
@@ -52,6 +60,9 @@ ForceAddonStatusStartupService.prototype = {
       })
       .error(function(error) {
         Components.utils.reportError(error);
+      })
+      .next(function() {
+        self.checking = false;
       });
   },
 
@@ -129,6 +140,43 @@ ForceAddonStatusStartupService.prototype = {
     });
 
     return Deferred;
+  },
+
+  registerListener : function()
+  {
+    AddonManager.addAddonListener(this);
+  },
+  deferredCheckStatus : function() {
+    var self = this;
+    return Deferred.next(function() {
+      return self.checkStatus();
+    });
+  },
+  onEnabling : function(aAddon, aNeedsRestart) {
+    this.deferredCheckStatus();
+  },
+  onEnabled : function(aAddon) {
+  },
+  onDisabling : function(aAddon, aNeedsRestart) {
+    this.deferredCheckStatus();
+  },
+  onDisabled : function(aAddon) {
+  },
+  onInstalling : function(aAddon, aNeedsRestart) {
+    this.deferredCheckStatus();
+  },
+  onInstalled : function(aAddon) {
+  },
+  onUninstalling : function(aAddon, aNeedsRestart) {
+    this.deferredCheckStatus();
+  },
+  onUninstalled : function(aAddon) {
+  },
+  onOperationCancelled : function(aAddon) {
+    this.deferredCheckStatus();
+  },
+  onPropertyChanged : function(aAddon, aProperties) {
+    this.deferredCheckStatus();
   },
 
   restart : function()
