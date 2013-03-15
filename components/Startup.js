@@ -43,7 +43,7 @@ ForceAddonStatusStartupService.prototype = {
     var changedCount = { value : 0 };
     this.checkExtensionsStatus(changedCount)
       .next(function() {
-        return self.checkPluginsStatus(changedCount);
+        return self.checkPluginsStatus();
       })
       .next(function() {
         if (changedCount.value > 0) {
@@ -83,10 +83,8 @@ ForceAddonStatusStartupService.prototype = {
       return Deferred;
   },
 
-  checkPluginsStatus : function(aChangedCount)
+  checkPluginsStatus : function()
   {
-    aChangedCount.value = aChangedCount.value || 0;
-
     var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
     if (controlledPlugins.length == 0)
       return Deferred;
@@ -121,12 +119,10 @@ ForceAddonStatusStartupService.prototype = {
         if (aControl.shouldBeActive !== null &&
             aPluginTag.disabled !== !aControl.shouldBeActive) {
           aPluginTag.disabled = !aControl.shouldBeActive;
-          aChangedCount.value++;
         }
         if (aControl.blocklisted !== null &&
             aPluginTag.blocklisted !== aControl.blocklisted) {
           aPluginTag.blocklisted = !!aControl.blocklisted;
-          aChangedCount.value++;
         }
         return true;
       });
