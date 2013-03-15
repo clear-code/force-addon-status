@@ -118,13 +118,16 @@ ForceAddonStatusStartupService.prototype = {
       controlledPlugins.some(function(aControl) {
         if (!aControl.pattern.test(aPluginTag.name))
           return false;
-        if (aPluginTag.disabled == !aControl.shouldBeActive &&
-            aPluginTag.blocklisted === aControl.blocklisted)
-          return true;
-        aPluginTag.disabled = !aControl.shouldBeActive;
-        if (aPluginTag.blocklisted !== null)
-          aPluginTag.blocklisted = aControl.blocklisted;
-        aChangedCount.value++;
+        if (aControl.shouldBeActive !== null &&
+            aPluginTag.disabled !== !aControl.shouldBeActive) {
+          aPluginTag.disabled = !aControl.shouldBeActive;
+          aChangedCount.value++;
+        }
+        if (aControl.blocklisted !== null &&
+            aPluginTag.blocklisted !== aControl.blocklisted) {
+          aPluginTag.blocklisted = !!aControl.blocklisted;
+          aChangedCount.value++;
+        }
         return true;
       });
     });
