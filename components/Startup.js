@@ -71,18 +71,42 @@ ForceAddonStatusStartupService.prototype = {
     var deferredTasks = [];
 
     var prefix = BASE + 'addons.';
-    var keys = prefs.getDescendant(prefix);
+    var keys = prefs.getChildren(prefix);
     aChangedCount.value = aChangedCount.value || 0;
     keys.forEach(function(aKey) {
       var id = aKey.replace(prefix, '');
-      var shouldBeActive = prefs.getPref(aKey);
+
+      var newStatus = prefs.getPref(aKey + '.status');
+      if (newStatus === null) { // backward compatibility
+        newStatus = prefs.getPref(aKey);
+        if (newStatus)
+          newStatus = 'enabled';
+        else
+          newStatus = 'disabled';
+      }
+      newStatus = String(newStatus).toLowerCase();
+
       var deferred = new Deferred();
       AddonManager.getAddonByID(id, function(aAddon) {
-        if (!aAddon || aAddon.isActive == shouldBeActive)
+        if (!aAddon)
           return deferred.call();
 
-        aAddon.userDisabled = !shouldBeActive;
-        aChangedCount.value++;
+        var shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
+        if (newStatus.indexOf('disabled') > -1)
+          shouldBeActive = false;
+        if (aAddon.isActive != shouldBeActive) {
+          aAddon.userDisabled = !shouldBeActive;
+          aChangedCount.value++;
+        }
+
+        var shouldUninstall = newStatus.indexOf('uninstall') > -1;
+        var shouldGlobal = newStatus.indexOf('global') > -1;
+        var isGlobal = aAddon.scope != AddonManager.SCOPE_PROFILE;
+        if (shouldUninstall || shouldGlobal != isGlobal) {
+          aAddon.uninstall();
+          aChangedCount.value++;
+        }
+
         deferred.call();
       });
       deferredTasks.push(deferred);

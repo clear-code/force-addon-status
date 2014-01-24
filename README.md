@@ -7,7 +7,27 @@ This addon provides ability to control enabled/disabled status of addons.
 ## For Extensions
 
 If you want an addon "tbtestpilot@labs.mozilla.com" to be controlled, then
-you have to create a boolean preference like:
+create a string preference for the addon, like:
+
+    pref("extensions.force-addon-status@clear-code.com.addons.tbtestpilot@labs.mozilla.com.status", "enabled");
+
+Possible values:
+
+  * `enabled`
+  * `disabled`
+  * `uninstall`
+  * `global`
+
+You can specify two or more values as a comma-separated likt, like:
+
+    pref("extensions.force-addon-status@clear-code.com.addons.tbtestpilot@labs.mozilla.com.status",
+           "global,enabled");
+
+If you set the value to `global` and the addon is installed to the user profile, then the user profile version will be uninstalled and the globally installed version will become active.
+
+### Deprecated method
+
+By the way, this is a deprecated method but you can control addons with boolean preferences like:
 
     pref("extensions.force-addon-status@clear-code.com.addons.tbtestpilot@labs.mozilla.com", true);
 
