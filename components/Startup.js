@@ -71,19 +71,25 @@ ForceAddonStatusStartupService.prototype = {
     var deferredTasks = [];
 
     var prefix = BASE + 'addons.';
-    var keys = prefs.getChildren(prefix);
+    var keys = prefs.getDescendant(prefix);
     aChangedCount.value = aChangedCount.value || 0;
     keys.forEach(function(aKey) {
-      var id = aKey.replace(prefix, '');
+      if (!aKey)
+        return;
 
-      var newStatus = prefs.getPref(aKey + '.status');
-      if (newStatus === null) { // backward compatibility
+      var id = aKey.replace(prefix, '');
+      var newStatus;
+      if (/\.status$/.test(id)) {
+        newStatus = prefs.getPref(aKey);
+        id = id.replace(/\.status$/, '');
+      } else { // backward compatibility
         newStatus = prefs.getPref(aKey);
         if (newStatus)
           newStatus = 'enabled';
         else
           newStatus = 'disabled';
       }
+
       newStatus = String(newStatus).toLowerCase();
 
       var deferred = new Deferred();
