@@ -1,3 +1,5 @@
+const DEBUG = false;
+
 const kCID  = Components.ID('{cd2892e0-87a8-11e2-9e96-0800200c9a66}'); 
 const kID   = '@clear-code.com/force-addon-status/startup;1';
 const kNAME = 'ForceAddonStatusStartupService';
@@ -68,6 +70,8 @@ ForceAddonStatusStartupService.prototype = {
 
   checkExtensionsStatus : function(aChangedCount)
   {
+    if (DEBUG)
+      dump('ForceAddonStatusStartupService::checkExtensionsStatus\n');
     var deferredTasks = [];
 
     var prefix = BASE + 'addons.';
@@ -78,10 +82,14 @@ ForceAddonStatusStartupService.prototype = {
         return;
 
       var id = aKey.replace(prefix, '');
+      if (DEBUG)
+        dump('  id ' + id + '\n');
       var newStatus;
       if (/\.status$/.test(id)) {
         newStatus = prefs.getPref(aKey);
         id = id.replace(/\.status$/, '');
+        if (DEBUG)
+          dump('  => ' + id + '\n');
       } else { // backward compatibility
         newStatus = prefs.getPref(aKey);
         if (newStatus)
@@ -92,6 +100,9 @@ ForceAddonStatusStartupService.prototype = {
 
       newStatus = String(newStatus).toLowerCase();
 
+      if (DEBUG)
+        dump('  newStatus ' + newStatus + '\n');
+
       var deferred = new Deferred();
       AddonManager.getAddonByID(id, function(aAddon) {
         if (!aAddon)
@@ -100,14 +111,22 @@ ForceAddonStatusStartupService.prototype = {
         var shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
         if (newStatus.indexOf('disabled') > -1)
           shouldBeActive = false;
+        if (DEBUG)
+          dump('  shouldBeActive ' + shouldBeActive + '\n');
         if (aAddon.isActive != shouldBeActive) {
           aAddon.userDisabled = !shouldBeActive;
           aChangedCount.value++;
         }
 
         var shouldUninstall = newStatus.indexOf('uninstall') > -1;
+        if (DEBUG)
+          dump('  shouldUninstall ' + shouldUninstall + '\n');
         var shouldGlobal = newStatus.indexOf('global') > -1;
+        if (DEBUG)
+          dump('  shouldGlobal ' + shouldGlobal + '\n');
         var isGlobal = aAddon.scope != AddonManager.SCOPE_PROFILE;
+        if (DEBUG)
+          dump('  isGlobal ' + isGlobal + '\n');
         if (shouldUninstall || shouldGlobal != isGlobal) {
           aAddon.uninstall();
           aChangedCount.value++;
