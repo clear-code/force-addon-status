@@ -244,7 +244,7 @@ ForceAddonStatusStartupService.prototype = {
     gLogger.log('try to restart');
     gLogger.log('  [restart (' + Ci.nsIAppStartup.eRestart + '), ' +
                    'force quit (' + Ci.nsIAppStartup.eForceQuit + ')]');
-    gLogger.finalize;
+    gLogger.finalize();
     Cc['@mozilla.org/toolkit/app-startup;1']
       .getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eForceQuit);
