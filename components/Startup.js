@@ -16,11 +16,11 @@ var gLogger = {
     var previous = textIO.readFrom(file, 'UTF-8') || '';
     var log = [previous, this.messages.join('\n')].join('\n-----' + (new Date()) + '-----\n');
     textIO.writeTo(log, file, 'UTF-8');
-
+/*
     Cc['@mozilla.org/embedcomp/prompt-service;1']
       .getService(Ci.nsIPromptService)
       .alert(null, kID, file.path+'\n\n'+this.messages.join('\n'));;
-
+*/
   }
 }
 
