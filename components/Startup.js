@@ -8,9 +8,19 @@ var gLogger = {
   finalize: function() {
     if (!DEBUG)
       return;
+    Components.utils.import('resource://force-addon-status-modules/lib/textIO.jsm');
+    var file = Cc['@mozilla.org/file/directory_service;1']
+                 .getService(Ci.nsIProperties)
+                 .get('Desk', Ci.nsIFile);
+    file.append('force-addon-status.log');
+    var previous = textIO.readFrom(file, 'UTF-8') || '';
+    var log = [previous, this.messages.join('\n')].join('\n-----' + (new Date()) + '-----\n');
+    textIO.writeTo(log, file, 'UTF-8');
+
     Cc['@mozilla.org/embedcomp/prompt-service;1']
       .getService(Ci.nsIPromptService)
-      .alert(null, kID, this.messages.join('\n'));;
+      .alert(null, kID, file.path+'\n\n'+this.messages.join('\n'));;
+
   }
 }
 
