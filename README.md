@@ -1,6 +1,7 @@
 # Abstract
 
 This addon provides ability to control enabled/disabled status of addons.
+This is mainly designed for corporate-use.
 
 # Usage
 
