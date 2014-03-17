@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="force-addon-status@clear-code.com"
                    em:name="Force Addon Status"
-                   em:version="1.1"
+                   em:version="1.2"
                    em:creator="ClearCode Inc."
                    em:description="Provides ability to change status of specific addon (enabled/disabled)."
                    em:homepageURL="http://www.clear-code.com/"
