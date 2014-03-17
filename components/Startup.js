@@ -78,8 +78,8 @@ ForceAddonStatusStartupService.prototype = {
         ObserverService.removeObserver(this, 'sessionstore-windows-restored');
         ObserverService.removeObserver(this, 'mail-startup-done');
         this.ready = true;
-        if (this.waitUntilStarted_deferredTrigger)
-          this.waitUntilStarted_deferredTrigger.call();
+        if (this.waitUntilStarted_trigger)
+          this.waitUntilStarted_trigger.call();
         return;
     }
   },
@@ -267,8 +267,8 @@ ForceAddonStatusStartupService.prototype = {
     if (this.ready)
       return;
 
-    this.waitUntilStarted_deferredTrigger = new Deferred();
-    return this.waitUntilStarted_deferredTrigger;
+    this.waitUntilStarted_trigger = new Deferred();
+    return this.waitUntilStarted_trigger;
   },
 
   restart : function()
