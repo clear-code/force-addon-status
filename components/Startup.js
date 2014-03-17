@@ -92,15 +92,16 @@ ForceAddonStatusStartupService.prototype = {
 
     var self = this;
     var changedCount = { value : 0 };
-    return this.checkExtensionsStatus(changedCount)
+    return Deferred.next(function() {
+        self.checkExtensionsStatus(changedCount);
+      })
       .next(function() {
         return self.checkPluginsStatus();
       })
       .next(function() {
         gLogger.log(changedCount.value + ' changed addon(s)');
-        if (changedCount.value > 0) {
+        if (changedCount.value > 0)
           self.restart();
-        }
       })
       .error(function(error) {
         Components.utils.reportError(error);
@@ -177,15 +178,13 @@ ForceAddonStatusStartupService.prototype = {
 
     if (deferredTasks.length > 0)
       return Deferred.parallel(deferredTasks);
-    else
-      return Deferred;
   },
 
   checkPluginsStatus : function()
   {
     var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
     if (controlledPlugins.length == 0)
-      return Deferred;
+      return;
 
     var allPatterns = [];
     controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
@@ -225,14 +224,11 @@ ForceAddonStatusStartupService.prototype = {
         return true;
       });
     });
-
-    return Deferred;
   },
 
   registerListener : function()
   {
     AddonManager.addAddonListener(this);
-    return Deferred;
   },
   onEnabling : function(aAddon, aNeedsRestart) {
     if (this.active)
@@ -269,7 +265,7 @@ ForceAddonStatusStartupService.prototype = {
 
   waitUntilStarted : function() {
     if (this.ready)
-      return Deferred;
+      return;
 
     this.waitUntilStarted_deferredTrigger = new Deferred();
     return this.waitUntilStarted_deferredTrigger;
