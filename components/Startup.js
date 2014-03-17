@@ -35,9 +35,9 @@ const ObserverService = Cc['@mozilla.org/observer-service;1']
                          .getService(Ci.nsIObserverService);
 
 Components.utils.import('resource://gre/modules/AddonManager.jsm');
-Components.utils.import('resource://gre/modules/Promise.jsm');
 
 Components.utils.import('resource://force-addon-status-modules/lib/prefs.js');
+Components.utils.import('resource://force-addon-status-modules/lib/jsdeferred.js');
 
 const BASE = 'extensions.force-addon-status@clear-code.com.';
 
@@ -96,7 +96,7 @@ ForceAddonStatusStartupService.prototype = {
   checkExtensionsStatus : function(aChangedCount)
   {
     gLogger.log('ForceAddonStatusStartupService::checkExtensionsStatus');
-    var promises = [];
+    var deferredTasks = [];
 
     var prefix = BASE + 'addons.';
     var keys = prefs.getDescendant(prefix);
@@ -124,11 +124,11 @@ ForceAddonStatusStartupService.prototype = {
 
       gLogger.log('  newStatus ' + newStatus);
 
-      var deferred = Promise.defer();
+      var deferred = new Deferred();
       AddonManager.getAddonByID(id, function(aAddon) {
         if (!aAddon) {
           gLogger.log('  => not installed.');
-          return deferred.resolve();
+          return deferred.call();
         }
 
         var shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
@@ -153,19 +153,22 @@ ForceAddonStatusStartupService.prototype = {
           aChangedCount.value++;
         }
 
-        deferred.resolve();
+        deferred.call();
       });
-      promises.push(deferred.promise);
+      deferredTasks.push(deferred);
     });
 
-    return Promise.all(promises);
+    if (deferredTasks.length > 0)
+      return Deferred.parallel(deferredTasks);
+    else
+      return Deferred;
   },
 
   checkPluginsStatus : function()
   {
     var controlledPlugins = prefs.getChildren(BASE + 'plugins.');
     if (controlledPlugins.length == 0)
-      return Promise.all([]);
+      return Deferred;
 
     var allPatterns = [];
     controlledPlugins = controlledPlugins.map(function(aEntryBaseKey) {
@@ -206,38 +209,44 @@ ForceAddonStatusStartupService.prototype = {
       });
     });
 
-    return Promise.all([]);
+    return Deferred;
   },
 
   registerListener : function()
   {
     AddonManager.addAddonListener(this);
   },
+  deferredCheckStatus : function() {
+    var self = this;
+    return Deferred.next(function() {
+      return self.checkStatus();
+    });
+  },
   onEnabling : function(aAddon, aNeedsRestart) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
   onEnabled : function(aAddon) {
   },
   onDisabling : function(aAddon, aNeedsRestart) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
   onDisabled : function(aAddon) {
   },
   onInstalling : function(aAddon, aNeedsRestart) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
   onInstalled : function(aAddon) {
   },
   onUninstalling : function(aAddon, aNeedsRestart) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
   onUninstalled : function(aAddon) {
   },
   onOperationCancelled : function(aAddon) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
   onPropertyChanged : function(aAddon, aProperties) {
-    this.checkStatus();
+    this.deferredCheckStatus();
   },
 
   restart : function()
