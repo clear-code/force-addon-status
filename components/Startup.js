@@ -42,6 +42,8 @@ Components.utils.import('resource://force-addon-status-modules/lib/jsdeferred.js
 const BASE = 'extensions.force-addon-status@clear-code.com.';
 
 function ForceAddonStatusStartupService() { 
+  this.ready = false;
+  this.active = false;
 }
 ForceAddonStatusStartupService.prototype = {
   classID          : kCID,
@@ -54,15 +56,30 @@ ForceAddonStatusStartupService.prototype = {
     {
       case 'profile-after-change':
         ObserverService.addObserver(this, 'final-ui-startup', false);
+        ObserverService.addObserver(this, 'sessionstore-windows-restored', false);
+        ObserverService.addObserver(this, 'mail-startup-done', false);
         return;
 
       case 'final-ui-startup':
         ObserverService.removeObserver(this, 'final-ui-startup');
+        this.registerListener();
         var self = this;
-        this.checkStatus()
+        return this.waitUntilStarted()
           .next(function() {
-            self.registerListener();
+            return self.checkStatus();
+          })
+          .next(function() {
+            self.active = true;
           });
+        return;
+
+      case 'sessionstore-windows-restored':
+      case 'mail-startup-done':
+        ObserverService.removeObserver(this, 'sessionstore-windows-restored');
+        ObserverService.removeObserver(this, 'mail-startup-done');
+        this.ready = true;
+        if (this.waitUntilStarted_deferredTrigger)
+          this.waitUntilStarted_deferredTrigger.call();
         return;
     }
   },
@@ -215,38 +232,47 @@ ForceAddonStatusStartupService.prototype = {
   registerListener : function()
   {
     AddonManager.addAddonListener(this);
-  },
-  deferredCheckStatus : function() {
-    var self = this;
-    return Deferred.next(function() {
-      return self.checkStatus();
-    });
+    return Deferred;
   },
   onEnabling : function(aAddon, aNeedsRestart) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
   },
   onEnabled : function(aAddon) {
   },
   onDisabling : function(aAddon, aNeedsRestart) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
   },
   onDisabled : function(aAddon) {
   },
   onInstalling : function(aAddon, aNeedsRestart) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
   },
   onInstalled : function(aAddon) {
   },
   onUninstalling : function(aAddon, aNeedsRestart) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
   },
   onUninstalled : function(aAddon) {
   },
   onOperationCancelled : function(aAddon) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
   },
   onPropertyChanged : function(aAddon, aProperties) {
-    this.deferredCheckStatus();
+    if (this.active)
+      this.checkStatus();
+  },
+
+  waitUntilStarted : function() {
+    if (this.ready)
+      return Deferred;
+
+    this.waitUntilStarted_deferredTrigger = new Deferred();
+    return this.waitUntilStarted_deferredTrigger;
   },
 
   restart : function()
