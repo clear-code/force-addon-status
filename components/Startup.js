@@ -4,6 +4,7 @@ var gLogger = {
   messages: [],
   log: function(aMessage) {
     this.messages.push(aMessage);
+    this.output();
   },
   output: function() {
     if (!DEBUG)
@@ -78,7 +79,6 @@ ForceAddonStatusStartupService.prototype = {
       case 'mail-startup-done':
         ObserverService.removeObserver(this, 'sessionstore-windows-restored');
         ObserverService.removeObserver(this, 'mail-startup-done');
-        gLogger.output();
         this.ready = true;
         if (this.waitUntilStarted_trigger)
           this.waitUntilStarted_trigger.call();
@@ -108,10 +108,8 @@ ForceAddonStatusStartupService.prototype = {
       .error(function(error) {
         Components.utils.reportError(error);
         gLogger.log('unexpected error: ' + error + '\n' + error.stack);
-        gLogger.output();
       })
       .next(function() {
-        gLogger.output();
         self.checking = false;
       });
   },
@@ -279,7 +277,6 @@ ForceAddonStatusStartupService.prototype = {
   restart : function()
   {
     gLogger.log('try to restart');
-    gLogger.output();
     Cc['@mozilla.org/toolkit/app-startup;1']
       .getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
