@@ -4,9 +4,9 @@ var gLogger = {
   messages: [],
   log: function(aMessage) {
     this.messages.push(aMessage);
-    this.output();
+    this.output(aMessage);
   },
-  output: function() {
+  output: function(aMessage) {
     if (!DEBUG)
       return;
     Components.utils.import('resource://force-addon-status-modules/lib/textIO.jsm');
@@ -15,7 +15,12 @@ var gLogger = {
                  .get('Desk', Ci.nsIFile);
     file.append('force-addon-status.log');
     var previous = textIO.readFrom(file, 'UTF-8') || '';
-    var log = [previous, this.messages.join('\n')].join('\n-----' + (new Date()) + '-----\n');
+    var log;
+    if (aMessage) {
+      log = previous + '\n[' + (new Date()) + '] ' + aMessage;
+    } else {
+      log = [previous, this.messages.join('\n')].join('\n-----' + (new Date()) + '-----\n');
+    }
     textIO.writeTo(log, file, 'UTF-8');
 /*
     Cc['@mozilla.org/embedcomp/prompt-service;1']
