@@ -150,8 +150,9 @@ ForceAddonStatusStartupService.prototype = {
 
       gLogger.log('  newStatus ' + newStatus);
 
-      var deferred = new Deferred();
-      AddonManager.getAddonByID(id, function(aAddon) {
+      var generateAddonProcessor = function() {
+        var deferred = new Deferred();
+        var callback = function(aAddon) {
         if (!aAddon) {
           gLogger.log('  => not installed.');
           return deferred.call();
@@ -160,6 +161,7 @@ ForceAddonStatusStartupService.prototype = {
         var shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
         if (newStatus.indexOf('disabled') > -1)
           shouldBeActive = false;
+
         gLogger.log('  shouldBeActive ' + shouldBeActive);
         if (aAddon.isActive != shouldBeActive) {
           aAddon.userDisabled = !shouldBeActive;
@@ -180,8 +182,32 @@ ForceAddonStatusStartupService.prototype = {
         }
 
         deferred.call();
-      });
-      deferredTasks.push(deferred);
+        };
+        return {
+          callback: callback,
+          deferred: deferred
+        };
+      };
+
+      if (!/[\*\?]/.test(id)) {
+        let processor = generateAddonProcessor();
+        deferredTasks.push(processor.deferred);
+        AddonManager.getAddonByID(id, processor.callback);
+      }
+      else {
+        let deferred = new Deferred();
+        let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
+        AddonManager.getAddonsByTypes(['extension'], function(aAddons) {
+          aAddons.forEach(function(aAddon) {
+            if (!matcher.test(aAddon.id))
+              return;
+            var processor = generateAddonProcessor();
+            processor.callback(aAddons);
+          });
+          deferred.call();
+        });
+        deferredTasks.push(deferred);
+      }
     });
 
     if (deferredTasks.length > 0)
