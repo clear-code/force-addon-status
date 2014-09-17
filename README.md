@@ -26,6 +26,8 @@ You can specify two or more values as a comma-separated list, like:
 
 If you set the value to `global` and the addon is installed to the user profile, then the user profile version will be uninstalled and the globally installed version will become active.
 
+You can specify wildcards ("?" and "*") in the addon id.
+
 ## For Plugins
 
 If you want a plugin named "Java(TM) Plug-in ..." to be controlled, then
