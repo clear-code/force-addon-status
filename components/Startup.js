@@ -174,7 +174,7 @@ ForceAddonStatusStartupService.prototype = {
         var shouldGlobal = newStatus.indexOf('global') > -1;
         gLogger.log('  shouldGlobal ' + shouldGlobal);
         var isGlobal = aAddon.scope != AddonManager.SCOPE_PROFILE;
-        gLogger.log('  isGlobal ' + isGlobal);
+        gLogger.log('  isGlobal ' + isGlobal + ' (scope=' + aAddon.scope + ', profile=' + AddonManager.SCOPE_PROFILE + ')');
         if (shouldUninstall || shouldGlobal != isGlobal) {
           aAddon.uninstall();
           gLogger.log(' => uninstalled');
@@ -197,10 +197,14 @@ ForceAddonStatusStartupService.prototype = {
       else {
         let deferred = new Deferred();
         let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
+        gLogger.log('change status of addons matched to <' + matcher + '>');
         AddonManager.getAddonsByTypes(['extension'], function(aAddons) {
+          gLogger.log('all installed extensions: ' + aAddons.length);
           aAddons.forEach(function(aAddon) {
+            gLogger.log('id = ' + aAddon.id);
             if (!matcher.test(aAddon.id))
               return;
+            gLogger.log(' => matched');
             var processor = generateAddonProcessor();
             processor.callback(aAddons);
           });
