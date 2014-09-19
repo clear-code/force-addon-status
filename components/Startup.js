@@ -100,7 +100,7 @@ ForceAddonStatusStartupService.prototype = {
     var self = this;
     var changedCount = { value : 0 };
     return Deferred.next(function() {
-        self.checkExtensionsStatus(changedCount);
+        return self.checkExtensionsStatus(changedCount);
       })
       .next(function() {
         return self.checkPluginsStatus();
@@ -214,7 +214,12 @@ ForceAddonStatusStartupService.prototype = {
       }
     });
 
-    if (deferredTasks.length > 0)
+    gLogger.log('deferred tasks: ' + deferredTasks.length);
+
+    if (deferredTasks.length == 1)
+      return deferredTasks[0];
+
+    if (deferredTasks.length > 1)
       return Deferred.parallel(deferredTasks);
   },
 
