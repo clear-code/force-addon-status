@@ -206,7 +206,7 @@ ForceAddonStatusStartupService.prototype = {
               return;
             gLogger.log(' => matched');
             var processor = generateAddonProcessor();
-            processor.callback(aAddons);
+            processor.callback(aAddon);
           });
           deferred.call();
         });
