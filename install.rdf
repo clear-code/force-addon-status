@@ -9,7 +9,8 @@
                    em:creator="ClearCode Inc."
                    em:description="Provides ability to change status of specific addon (enabled/disabled)."
                    em:homepageURL="http://www.clear-code.com/"
-                   em:type="2">
+                   em:type="2"
+                   em:multiprocessCompatible="true">
 
     <em:updateURL></em:updateURL>
     <em:updateKey></em:updateKey>
