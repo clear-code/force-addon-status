@@ -7,8 +7,12 @@ var gLogger = {
     this.output(aMessage);
   },
   output: function(aMessage) {
-    if (!DEBUG)
+    if (!DEBUG) {
+      Cc['@mozilla.org/consoleservice;1']
+        .getService(Ci.nsIConsoleService)
+        .logStringMessage(this.messages.join('\n'));
       return;
+    }
     Components.utils.import('resource://force-addon-status-modules/lib/textIO.jsm');
     var file = Cc['@mozilla.org/file/directory_service;1']
                  .getService(Ci.nsIProperties)
