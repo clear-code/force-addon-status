@@ -10,7 +10,7 @@ var gLogger = {
     if (!DEBUG) {
       Cc['@mozilla.org/consoleservice;1']
         .getService(Ci.nsIConsoleService)
-        .logStringMessage(this.messages.join('\n'));
+        .logStringMessage('[force-addon-statys] ' + aMessage);
       return;
     }
     Components.utils.import('resource://force-addon-status-modules/lib/textIO.jsm');
