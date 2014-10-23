@@ -10,7 +10,7 @@ var gLogger = {
     if (aMessage) {
       Cc['@mozilla.org/consoleservice;1']
         .getService(Ci.nsIConsoleService)
-        .logStringMessage('[force-addon-statys] ' + aMessage);
+        .logStringMessage('[force-addon-status] ' + aMessage);
     }
     if (!DEBUG)
       return;
