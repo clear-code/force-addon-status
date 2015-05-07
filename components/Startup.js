@@ -241,7 +241,7 @@ ForceAddonStatusStartupService.prototype = {
       allPatterns.push(pattern);
       return {
         pattern :        new RegExp(pattern),
-        enabledState : prefs.getPref(aEntryBaseKey + '.enabledstate')
+        enabledState : prefs.getPref(aEntryBaseKey + '.enabledState')
       };
     });
     controlledPlugins = controlledPlugins.filter(function(aControl) {
