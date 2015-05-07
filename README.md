@@ -35,10 +35,17 @@ you have to create two preferences like:
 
     pref("extensions.force-addon-status@clear-code.com.plugins.0.pattern",
          "^Java\(TM\) Plug-in");
-    pref("extensions.force-addon-status@clear-code.com.plugins.0.status",
-         false);
+    pref("extensions.force-addon-status@clear-code.com.plugins.0.enabledState",
+         2);
+
 
 The value of ".pattern" is a regular expression (case sensitive) for the name
 of the plugin, because addon-id for plugins are modified on every install.
 
-If the value of ".status" is `true`, then the plugin will be activated. Otherwise disabled.
+Possible values for `.enabledState`:
+
+  * 0 (disabled)
+  * 1 (click to play)
+  * 2 (enabled)
+
+see also: http://mxr.mozilla.org/mozilla-beta/source/dom/plugins/base/nsIPluginTag.idl

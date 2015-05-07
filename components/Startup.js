@@ -241,8 +241,7 @@ ForceAddonStatusStartupService.prototype = {
       allPatterns.push(pattern);
       return {
         pattern :        new RegExp(pattern),
-        shouldBeActive : prefs.getPref(aEntryBaseKey + '.status'),
-        blocklisted :    prefs.getPref(aEntryBaseKey + '.blocklisted')
+        enabledState : prefs.getPref(aEntryBaseKey + '.enabledstate')
       };
     });
     controlledPlugins = controlledPlugins.filter(function(aControl) {
@@ -261,13 +260,11 @@ ForceAddonStatusStartupService.prototype = {
       controlledPlugins.some(function(aControl) {
         if (!aControl.pattern.test(aPluginTag.name))
           return false;
-        if (aControl.shouldBeActive !== null &&
-            aPluginTag.disabled !== !aControl.shouldBeActive) {
-          aPluginTag.disabled = !aControl.shouldBeActive;
         }
-        if (aControl.blocklisted !== null &&
-            aPluginTag.blocklisted !== aControl.blocklisted) {
-          aPluginTag.blocklisted = !!aControl.blocklisted;
+        if (aControl.enabledState !== null &&
+            aPluginTag.enabledState !== !aControl.enabledState) {
+          aPluginTag.enabledState = aControl.enabledState;
+          gLogger.log('aPluginTag.enabledState => ' + aPluginTag.enabledState);
         }
         return true;
       });
