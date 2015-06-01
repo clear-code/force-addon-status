@@ -258,7 +258,7 @@ ForceAddonStatusStartupService.prototype = {
         return;
 
       controlledPlugins.some(function(aControl) {
-        if (!aControl.pattern.test(aPluginTag.name))
+        if (!aControl.pattern.test(aPluginTag.name)) {
           return false;
         }
         if (aControl.enabledState !== null &&
