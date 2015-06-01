@@ -35,7 +35,7 @@ var gLogger = {
   }
 }
 
-const kCID  = Components.ID('{cd2892e0-87a8-11e2-9e96-0800200c9a66}'); 
+const kCID  = Components.ID('{cd2892e0-87a8-11e2-9e96-0800200c9a66}');
 const kID   = '@clear-code.com/force-addon-status/startup;1';
 const kNAME = 'ForceAddonStatusStartupService';
 
@@ -52,7 +52,7 @@ Components.utils.import('resource://force-addon-status-modules/lib/jsdeferred.js
 
 const BASE = 'extensions.force-addon-status@clear-code.com.';
 
-function ForceAddonStatusStartupService() { 
+function ForceAddonStatusStartupService() {
   this.ready = false;
   this.active = false;
 }
@@ -60,8 +60,8 @@ ForceAddonStatusStartupService.prototype = {
   classID          : kCID,
   contractID       : kID,
   classDescription : kNAME,
-   
-  observe : function(aSubject, aTopic, aData) 
+
+  observe : function(aSubject, aTopic, aData)
   {
     gLogger.log('observe: ' + aTopic);
     switch (aTopic)
@@ -95,8 +95,8 @@ ForceAddonStatusStartupService.prototype = {
         return;
     }
   },
- 
-  checkStatus : function() 
+
+  checkStatus : function()
   {
     if (this.checking)
       return;
@@ -323,8 +323,8 @@ ForceAddonStatusStartupService.prototype = {
       .getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
   },
-  
-  QueryInterface : function(aIID) 
+
+  QueryInterface : function(aIID)
   {
     if(!aIID.equals(Ci.nsIObserver) &&
        !aIID.equals(Ci.nsISupports)) {
