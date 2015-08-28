@@ -33,10 +33,15 @@
 
     pref("extensions.force-addon-status@clear-code.com.plugins.0.pattern",
          "^Java\(TM\) Plug-in");
-    pref("extensions.force-addon-status@clear-code.com.plugins.0.status",
-         false);
+    pref("extensions.force-addon-status@clear-code.com.plugins.0.enabledState",
+         0);
 
 「.pattern」の値は、プラグイン名に対して適用される、大文字小文字を区別する正規表現です。
 これは、プラグインのアドオンとしてのIDがインストールの度に変化するためです。
 
-「.status」の値がtrueであればプラグインを有効化し、falseであれば無効化します。
+「.status」の値は以下の意味になります。
+
+  * 0 (常に無効)
+  * 1 (クリックして有効化)
+  * 2 (常に有効)
+
