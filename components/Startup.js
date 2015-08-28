@@ -46,9 +46,9 @@ const ObserverService = Cc['@mozilla.org/observer-service;1']
                          .getService(Ci.nsIObserverService);
 
 Components.utils.import('resource://gre/modules/AddonManager.jsm');
+Components.utils.import('resource://gre/modules/Promise.jsm');
 
 Components.utils.import('resource://force-addon-status-modules/lib/prefs.js');
-Components.utils.import('resource://force-addon-status-modules/lib/jsdeferred.js');
 
 const BASE = 'extensions.force-addon-status@clear-code.com.';
 
@@ -75,23 +75,16 @@ ForceAddonStatusStartupService.prototype = {
       case 'final-ui-startup':
         ObserverService.removeObserver(this, 'final-ui-startup');
         this.registerListener();
-        var self = this;
-        return this.waitUntilStarted()
-          .next(function() {
-            return self.checkStatus();
-          })
-          .next(function() {
-            self.active = true;
-          });
         return;
 
       case 'sessionstore-windows-restored':
       case 'mail-startup-done':
         ObserverService.removeObserver(this, 'sessionstore-windows-restored');
         ObserverService.removeObserver(this, 'mail-startup-done');
-        this.ready = true;
-        if (this.waitUntilStarted_trigger)
-          this.waitUntilStarted_trigger.call();
+        return this.checkStatus()
+          .then((function() {
+            this.active = true;
+          }).bind(this));
         return;
     }
   },
@@ -102,32 +95,29 @@ ForceAddonStatusStartupService.prototype = {
       return;
     this.checking = true;
 
-    var self = this;
     var changedCount = { value : 0 };
-    return Deferred.next(function() {
-        return self.checkExtensionsStatus(changedCount);
-      })
-      .next(function() {
-        return self.checkPluginsStatus();
-      })
-      .next(function() {
+    return this.checkExtensionsStatus(changedCount)
+      .then((function() {
+        return this.checkPluginsStatus();
+      }).bind(this))
+      .then((function() {
         gLogger.log(changedCount.value + ' changed addon(s)');
         if (changedCount.value > 0)
-          self.restart();
-      })
-      .error(function(error) {
+          this.restart();
+      }).bind(this))
+      .catch((function(error) {
         Components.utils.reportError(error);
         gLogger.log('unexpected error: ' + error + '\n' + error.stack);
-      })
-      .next(function() {
-        self.checking = false;
-      });
+      }).bind(this))
+      .then((function() {
+        this.checking = false;
+      }).bind(this));
   },
 
   checkExtensionsStatus : function(aChangedCount)
   {
     gLogger.log('ForceAddonStatusStartupService::checkExtensionsStatus');
-    var deferredTasks = [];
+    var promises = [];
 
     var prefix = BASE + 'addons.';
     var keys = prefs.getDescendant(prefix);
@@ -156,11 +146,11 @@ ForceAddonStatusStartupService.prototype = {
       gLogger.log('  newStatus ' + newStatus);
 
       var generateAddonProcessor = function() {
-        var deferred = new Deferred();
+        var resolver = null;
         var callback = function(aAddon) {
         if (!aAddon) {
           gLogger.log('  => not installed.');
-          return deferred.call();
+          return resolver();
         }
 
         var shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
@@ -186,21 +176,24 @@ ForceAddonStatusStartupService.prototype = {
           aChangedCount.value++;
         }
 
-        deferred.call();
+        resolver();
         };
+        var promise = new Promise(function(resolve, reject) {
+          resolver = resolve;
+        });
         return {
           callback: callback,
-          deferred: deferred
+          promise: promise
         };
       };
 
       if (!/[\*\?]/.test(id)) {
         let processor = generateAddonProcessor();
-        deferredTasks.push(processor.deferred);
+        promises.push(processor.promise);
         AddonManager.getAddonByID(id, processor.callback);
       }
       else {
-        let deferred = new Deferred();
+        let promise = new Promise(function(resolve, reject) {
         let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
         gLogger.log('change status of addons matched to <' + matcher + '>');
         AddonManager.getAddonsByTypes(['extension'], function(aAddons) {
@@ -213,19 +206,20 @@ ForceAddonStatusStartupService.prototype = {
             var processor = generateAddonProcessor();
             processor.callback(aAddon);
           });
-          deferred.call();
+          resolve();
         });
-        deferredTasks.push(deferred);
+        });
+        promises.push(promise);
       }
     });
 
-    gLogger.log('deferred tasks: ' + deferredTasks.length);
+    gLogger.log('promises: ' + promises.length);
 
-    if (deferredTasks.length == 1)
-      return deferredTasks[0];
+    if (promises.length == 1)
+      return promises[0];
 
-    if (deferredTasks.length > 1)
-      return Deferred.parallel(deferredTasks);
+    if (promises.length > 1)
+      return Promise.all(promises);
   },
 
   checkPluginsStatus : function()
@@ -306,14 +300,6 @@ ForceAddonStatusStartupService.prototype = {
   onPropertyChanged : function(aAddon, aProperties) {
     if (this.active)
       this.checkStatus();
-  },
-
-  waitUntilStarted : function() {
-    if (this.ready)
-      return;
-
-    this.waitUntilStarted_trigger = new Deferred();
-    return this.waitUntilStarted_trigger;
   },
 
   restart : function()
