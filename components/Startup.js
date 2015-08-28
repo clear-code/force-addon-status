@@ -1,5 +1,3 @@
-const DEBUG = true;
-
 var gLogger = {
   messages: [],
   log: function(aMessage) {
@@ -12,7 +10,7 @@ var gLogger = {
         .getService(Ci.nsIConsoleService)
         .logStringMessage('[force-addon-status] ' + aMessage);
     }
-    if (!DEBUG)
+    if (!prefs.getPref('extensions.force-addon-status@clear-code.com.debug'))
       return;
     Components.utils.import('resource://force-addon-status-modules/lib/textIO.jsm');
     var file = Cc['@mozilla.org/file/directory_service;1']
