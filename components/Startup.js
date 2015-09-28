@@ -213,6 +213,9 @@ ForceAddonStatusStartupService.prototype = {
 
     gLogger.log('promises: ' + promises.length);
 
+    if (promises.length == 0)
+      return Promise.resolve();
+
     if (promises.length == 1)
       return promises[0];
 
