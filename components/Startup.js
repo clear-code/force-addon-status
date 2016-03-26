@@ -239,21 +239,27 @@ ForceAddonStatusStartupService.prototype = {
         enabledState : prefs.getPref(aEntryBaseKey + '.enabledState')
       };
     });
+    gLogger.log('controlledPlugins => ' + uneval(controlledPlugins));
     controlledPlugins = controlledPlugins.filter(function(aControl) {
       return aControl;
     });
+    gLogger.log('controlledPlugins => ' + uneval(controlledPlugins));
 
     allPatterns = new RegExp('(' + allPatterns.join('|') + ')');
+    gLogger.log('allPatterns => ' + uneval(allPatterns));
 
     var PluginHost = Cc['@mozilla.org/plugin/host;1']
                       .getService(Ci.nsIPluginHost);
     var plugins = PluginHost.getPluginTags();
     plugins.forEach(function(aPluginTag) {
+      gLogger.log('aPluginTag.name => ' + aPluginTag.name);
       if (!allPatterns.test(aPluginTag.name))
         return;
 
       controlledPlugins.some(function(aControl) {
+        gLogger.log('aControl => ' + uneval(aControl));
         if (!aControl.pattern.test(aPluginTag.name)) {
+          gLogger.log('unmatched');
           return false;
         }
         if (aControl.enabledState !== null &&
