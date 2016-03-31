@@ -1,3 +1,5 @@
+ダウンロードリンク：https://addons.mozilla.org/firefox/addon/force-addon-status/
+
 # 概要
 
 このアドオンは、アドオンの有効・無効の状態を管理するための機能を提供します。
