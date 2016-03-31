@@ -1,3 +1,5 @@
+Download link: https://addons.mozilla.org/firefox/addon/force-addon-status/
+
 # Abstract
 
 This addon provides ability to control enabled/disabled status of addons.
