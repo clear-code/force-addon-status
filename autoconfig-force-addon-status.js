@@ -78,25 +78,16 @@
     checkExtensionsStatus: async function() {
       log('checkExtensionsStatus');
       var count = 0;
-      var prefix = `${BASE}addons.`;
-      var keys = getDescendantPrefs(prefix);
+      const PREFIX = `${BASE}addons.`;
+      var keys = getDescendantPrefs(PREFIX);
       for (let key of keys) {
         if (!key)
           continue;
-        let id = key.replace(prefix, '');
 
-        let addons;
-        if (!/[\*\?]/.test(id)) {
-          addons = [await new Promise((aResolve, aReject) => AddonManager.getAddonByID(id, aResolve))];
-        }
-        else {
-          addons = await new Promise((aResolve, aReject) => AddonManager.getAddonsByTypes(['extension'], aResolve));
-          let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
-          addons = addons.filter(aAddon => matcher.test(aAddon.id));
-        }
+        let id = key.replace(PREFIX, '');
 
         let newStatus;
-        if (/\.status$/.test(id)) {
+        if (/\.status$/.test(key)) {
           newStatus = String(getPref(key)).toLowerCase();
           id = id.replace(/\.status$/, '');
         }
@@ -107,6 +98,19 @@
         if (newStatus.indexOf('disabled') > -1)
           shouldBeActive = false;
 
+        log(`finding ${id}`);
+
+        let addons;
+        if (!/[\*\?]/.test(id)) {
+          addons = [await new Promise((aResolve, aReject) => AddonManager.getAddonByID(id, aResolve))];
+        }
+        else {
+          addons = await new Promise((aResolve, aReject) => AddonManager.getAddonsByTypes(['extension'], aResolve));
+          let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
+          addons = addons.filter(aAddon => matcher.test(aAddon.id));
+        }
+        log(` => ${addons.length} addon matched`);
+
         for (let addon of addons) {
           log(`updating ${addon}`);
           if (!addon)
@@ -114,12 +118,13 @@
 
           log(`check status of ${addon.name}`);
           if (addon.isActive != shouldBeActive) {
-            aAddon.userDisabled = !shouldBeActive;
+            addon.userDisabled = !shouldBeActive;
+            log(` => disabled or enabled`);
             count++;
           }
           let shouldUninstall = newStatus.indexOf('uninstall') > -1;
           let shouldGlobal = newStatus.indexOf('global') > -1;
-          let isGlobal = aAddon.scope != AddonManager.SCOPE_PROFILE;
+          let isGlobal = addon.scope != AddonManager.SCOPE_PROFILE;
           if (shouldUninstall || shouldGlobal != isGlobal) {
             log(` => uninstall`);
             addon.uninstall();
@@ -150,6 +155,7 @@
 
       allPatterns = new RegExp(`(${allPatterns.join('|')})`);
 
+      var count = 0;
       var PluginHost = Cc['@mozilla.org/plugin/host;1']
                         .getService(Ci.nsIPluginHost);
       var plugins = PluginHost.getPluginTags();
@@ -160,13 +166,17 @@
         for (let control of controlledPlugins) {
           if (!control.pattern.test(plugin.name))
             continue;
+          log(`checking status of ${plugin.name}`);
           if (control.enabledState !== null &&
               plugin.enabledState !== !control.enabledState) {
             plugin.enabledState = control.enabledState;
+            log(` => disabled or enabled`);
+            count++;
           }
           break;
         }
       }
+      return count;
     },
 
     // addon listener
