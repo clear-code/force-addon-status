@@ -89,11 +89,11 @@
 
         let newStatus;
         if (/\.status$/.test(id)) {
-          newStatus = String(getPref(aKey)).toLowerCase();
+          newStatus = String(getPref(key)).toLowerCase();
           id = id.replace(/\.status$/, '');
         }
         else { // backward compatibility
-          newStatus = getPref(aKey) ? 'enabled' : 'disabled';
+          newStatus = getPref(key) ? 'enabled' : 'disabled';
         }
         let shouldBeActive = newStatus.indexOf('enabled') > -1 || newStatus.indexOf('disabled') < 0;
         if (newStatus.indexOf('disabled') > -1)
@@ -142,15 +142,15 @@
                         .getService(Ci.nsIPluginHost);
       var plugins = PluginHost.getPluginTags();
       for (let plugin of plugins) {
-        if (!allPatterns.test(aPluginTag.name))
+        if (!allPatterns.test(plugin.name))
           continue;
 
         for (let control of controlledPlugins) {
-          if (!control.pattern.test(aPluginTag.name))
+          if (!control.pattern.test(plugin.name))
             continue;
           if (control.enabledState !== null &&
-              aPluginTag.enabledState !== !control.enabledState) {
-            aPluginTag.enabledState = control.enabledState;
+              plugin.enabledState !== !control.enabledState) {
+            plugin.enabledState = control.enabledState;
           }
           break;
         }
