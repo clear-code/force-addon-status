@@ -23,7 +23,7 @@
     return possibleChildren.sort();
   };
 
-  var restart = () => {
+  let restart = () => {
     Cc['@mozilla.org/toolkit/app-startup;1']
       .getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
