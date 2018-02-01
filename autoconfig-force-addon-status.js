@@ -4,6 +4,10 @@
   let { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
   const BASE = 'extensions.force-addon-status@clear-code.com.';
 
+  let log = (aMessage) => {
+    Services.console.logStringMessage(`[force-addon-status] ${aMessage}`);
+  };
+
   let getDescendantPrefs = (aRoot) => {
     return Services.prefs.getChildList(aRoot, {}).sort();
   };
@@ -37,6 +41,7 @@
       switch (aTopic) {
         case 'final-ui-startup':
           Services.obs.removeObserver(statusChecker, 'final-ui-startup');
+          log('register addon listener');
           AddonManager.addAddonListener(this);
           break;
 
@@ -51,6 +56,7 @@
     },
 
     checkStatus: async function() {
+      log('checkStatus');
       if (this.checking)
         return;
       this.checking = true;
@@ -59,6 +65,7 @@
         var changedCount = 0;
         changedCount += await this.checkExtensionsStatus();
         changedCount += this.checkPluginsStatus();
+        log(`changed count = ${changedCount}`);
         if (changedCount > 0)
           return restart();
       }
@@ -69,6 +76,7 @@
     },
 
     checkExtensionsStatus: async function() {
+      log('checkExtensionsStatus');
       var count = 0;
       var prefix = `${BASE}addons.`;
       var keys = getDescendantPrefs(prefix);
@@ -100,9 +108,11 @@
           shouldBeActive = false;
 
         for (let addon of addons) {
+          log(`updating ${addon}`);
           if (!addon)
             continue;
 
+          log(`check status of ${addon.name}`);
           if (addon.isActive != shouldBeActive) {
             aAddon.userDisabled = !shouldBeActive;
             count++;
@@ -111,6 +121,7 @@
           let shouldGlobal = newStatus.indexOf('global') > -1;
           let isGlobal = aAddon.scope != AddonManager.SCOPE_PROFILE;
           if (shouldUninstall || shouldGlobal != isGlobal) {
+            log(` => uninstall`);
             addon.uninstall();
             count++;
           }
@@ -120,6 +131,7 @@
     },
 
     checkPluginsStatus: function() {
+      log('checkPluginsStatus');
       var controlledPlugins = getChildPrefs(`${BASE}plugins.`);
       if (controlledPlugins.length == 0)
         return 0;
