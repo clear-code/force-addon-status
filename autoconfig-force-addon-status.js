@@ -1,24 +1,24 @@
 {// Force Addon Status, for Firefox 52/Thunderbird 52 and later
-  let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-  let { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
-  let { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  const { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
+  const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
   const BASE = 'extensions.force-addon-status@clear-code.com.';
 
-  let log = (aMessage) => {
+  const log = (aMessage) => {
     Services.console.logStringMessage(`[force-addon-status] ${aMessage}`);
   };
 
-  let getDescendantPrefs = (aRoot) => {
+  const getDescendantPrefs = (aRoot) => {
     return Services.prefs.getChildList(aRoot, {}).sort();
   };
-  let getChildPrefs = (aRoot) => {
+  const getChildPrefs = (aRoot) => {
     aRoot = aRoot.replace(/\.$/, '');
-    var foundChildren = {};
-    var possibleChildren = [];
+    const foundChildren = {};
+    const possibleChildren = [];
     getDescendantPrefs(aRoot)
       .forEach(aPrefstring => {
-        let name = aPrefstring.replace(aRoot + '.', '');
-        let possibleChildKey = aRoot + '.' + name.split('.')[0];
+        const name = aPrefstring.replace(`${aRoot}.`, '');
+        const possibleChildKey = `${aRoot}.${name.split('.')[0]}`;
         if (possibleChildKey && !(possibleChildKey in foundChildren)) {
           possibleChildren.push(possibleChildKey);
           foundChildren[possibleChildKey] = true;
@@ -27,7 +27,7 @@
     return possibleChildren.sort();
   };
 
-  let restart = () => {
+  const restart = () => {
     Cc['@mozilla.org/toolkit/app-startup;1']
       .getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
@@ -62,7 +62,7 @@
       this.checking = true;
 
       try {
-        var changedCount = 0;
+        let changedCount = 0;
         changedCount += await this.checkExtensionsStatus();
         changedCount += this.checkPluginsStatus();
         log(`changed count = ${changedCount}`);
@@ -77,9 +77,9 @@
 
     checkExtensionsStatus: async function() {
       log('checkExtensionsStatus');
-      var count = 0;
+      let count = 0;
       const PREFIX = `${BASE}addons.`;
-      var keys = getDescendantPrefs(PREFIX);
+      const keys = getDescendantPrefs(PREFIX);
       for (let key of keys) {
         if (!key)
           continue;
@@ -106,7 +106,7 @@
         }
         else {
           addons = await new Promise((aResolve, aReject) => AddonManager.getAddonsByTypes(['extension'], aResolve));
-          let matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
+          const matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
           addons = addons.filter(aAddon => matcher.test(aAddon.id));
         }
         log(` => ${addons.length} addon matched`);
@@ -122,9 +122,9 @@
             log(` => disabled or enabled`);
             count++;
           }
-          let shouldUninstall = newStatus.indexOf('uninstall') > -1;
-          let shouldGlobal = newStatus.indexOf('global') > -1;
-          let isGlobal = addon.scope != AddonManager.SCOPE_PROFILE;
+          const shouldUninstall = newStatus.indexOf('uninstall') > -1;
+          const shouldGlobal = newStatus.indexOf('global') > -1;
+          const isGlobal = addon.scope != AddonManager.SCOPE_PROFILE;
           if (shouldUninstall || shouldGlobal != isGlobal) {
             log(` => uninstall`);
             addon.uninstall();
@@ -137,13 +137,13 @@
 
     checkPluginsStatus: function() {
       log('checkPluginsStatus');
-      var controlledPlugins = getChildPrefs(`${BASE}plugins.`);
+      let controlledPlugins = getChildPrefs(`${BASE}plugins.`);
       if (controlledPlugins.length == 0)
         return 0;
 
-      var allPatterns = [];
+      let allPatterns = [];
       controlledPlugins = controlledPlugins.map(aEntryBaseKey => {
-        var pattern = getPref(`${aEntryBaseKey}.pattern`);
+        const pattern = getPref(`${aEntryBaseKey}.pattern`);
         if (!pattern)
           return null;
         allPatterns.push(pattern);
@@ -155,10 +155,10 @@
 
       allPatterns = new RegExp(`(${allPatterns.join('|')})`);
 
-      var count = 0;
-      var PluginHost = Cc['@mozilla.org/plugin/host;1']
-                        .getService(Ci.nsIPluginHost);
-      var plugins = PluginHost.getPluginTags();
+      let count = 0;
+      const PluginHost = Cc['@mozilla.org/plugin/host;1']
+                          .getService(Ci.nsIPluginHost);
+      const plugins = PluginHost.getPluginTags();
       for (let plugin of plugins) {
         if (!allPatterns.test(plugin.name))
           continue;
