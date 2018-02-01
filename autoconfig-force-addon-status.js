@@ -62,9 +62,7 @@
       this.checking = true;
 
       try {
-        let changedCount = 0;
-        changedCount += await this.checkExtensionsStatus();
-        changedCount += this.checkPluginsStatus();
+        const changedCount = await this.checkExtensionsStatus();
         log(`changed count = ${changedCount}`);
         if (changedCount > 0)
           return restart();
@@ -130,50 +128,6 @@
             addon.uninstall();
             count++;
           }
-        }
-      }
-      return count;
-    },
-
-    checkPluginsStatus: function() {
-      log('checkPluginsStatus');
-      let controlledPlugins = getChildPrefs(`${BASE}plugins.`);
-      if (controlledPlugins.length == 0)
-        return 0;
-
-      let allPatterns = [];
-      controlledPlugins = controlledPlugins.map(aEntryBaseKey => {
-        const pattern = getPref(`${aEntryBaseKey}.pattern`);
-        if (!pattern)
-          return null;
-        allPatterns.push(pattern);
-        return {
-          pattern :      new RegExp(pattern),
-          enabledState : getPref(`${aEntryBaseKey}.enabledState`)
-        };
-      }).filter(aControl => !!aControl);
-
-      allPatterns = new RegExp(`(${allPatterns.join('|')})`);
-
-      let count = 0;
-      const PluginHost = Cc['@mozilla.org/plugin/host;1']
-                          .getService(Ci.nsIPluginHost);
-      const plugins = PluginHost.getPluginTags();
-      for (let plugin of plugins) {
-        if (!allPatterns.test(plugin.name))
-          continue;
-
-        for (let control of controlledPlugins) {
-          if (!control.pattern.test(plugin.name))
-            continue;
-          log(`checking status of ${plugin.name}`);
-          if (control.enabledState !== null &&
-              plugin.enabledState !== !control.enabledState) {
-            plugin.enabledState = control.enabledState;
-            log(` => disabled or enabled`);
-            count++;
-          }
-          break;
         }
       }
       return count;
