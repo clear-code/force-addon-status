@@ -143,7 +143,7 @@
 
       var allPatterns = [];
       controlledPlugins = controlledPlugins.map(aEntryBaseKey => {
-        var pattern = getPref(aEntryBaseKey + '.pattern');
+        var pattern = getPref(`${aEntryBaseKey}.pattern`);
         if (!pattern)
           return null;
         allPatterns.push(pattern);
