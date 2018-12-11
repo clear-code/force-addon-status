@@ -111,7 +111,7 @@
 
         for (let addon of addons) {
           log(`updating ${addon}`);
-          if (!addon)
+          if (!addon || addon.appDisabled)
             continue;
 
           log(`check status of ${addon.name}`);
