@@ -116,9 +116,21 @@
 
           log(`check status of ${addon.name}`);
           if (addon.isActive != shouldBeActive) {
-            addon.userDisabled = !shouldBeActive;
-            log(` => disabled or enabled`);
-            count++;
+            if (shouldBeActive) {
+              log(` => enabled`);
+              await addon.enable();
+            }
+            else {
+              log(` => disabled`);
+              await addon.disable();
+            }
+            if (addon.isActive == shouldBeActive) {
+              log(` => disabled or enabled`);
+              count++;
+            }
+            else {
+              log(` => no change`);
+            }
           }
           const shouldUninstall = newStatus.indexOf('uninstall') > -1;
           const shouldGlobal = newStatus.indexOf('global') > -1;
