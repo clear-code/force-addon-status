@@ -1,4 +1,4 @@
-{// Force Addon Status, for Firefox 52/Thunderbird 52 and later
+{// Force Addon Status, for Firefox 68/Thunderbird 68 and later
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
   const { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
   const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
@@ -100,10 +100,10 @@
 
         let addons;
         if (!/[\*\?]/.test(id)) {
-          addons = [await new Promise((aResolve, aReject) => AddonManager.getAddonByID(id, aResolve))];
+          addons = [await AddonManager.getAddonByID(id)];
         }
         else {
-          addons = await new Promise((aResolve, aReject) => AddonManager.getAddonsByTypes(['extension'], aResolve));
+          addons = await AddonManager.getAddonsByTypes(['extension']);
           const matcher = new RegExp(id.replace(/\?/g, '.').replace(/\*/g, '.*'));
           addons = addons.filter(aAddon => matcher.test(aAddon.id));
         }
